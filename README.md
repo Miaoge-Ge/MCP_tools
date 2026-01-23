@@ -9,6 +9,7 @@ This repo provides a lightweight **MCP server** (Model Context Protocol) impleme
 - **stdio MCP server**: easy to embed as a subprocess.
 - **Tools**:
   - `vision_describe`: image understanding via an OpenAI-compatible multimodal gateway
+  - `image_save`: save incoming images (data URLs) to local directory
   - `web_search`: search via Search1API or Serper
   - `weather_query`: Seniverse (心知天气)
   - `reminder_create` / `reminder_list` / `reminder_cancel`: reminders delivered via NapCat OneBot HTTP API
@@ -65,6 +66,10 @@ All configs are loaded from environment variables (typically via `.env`).
 - `VISION_API_KEY`: API key
 - `VISION_MODEL`: model name (e.g. `qwen3-vl-plus`)
 
+### Image saving
+
+- `IMAGE_SAVE_DIR`: directory to store images saved by `image_save` (default `./data/images`)
+
 ### NapCat (for reminders delivery)
 
 - `NAPCAT_HTTP_URL`: OneBot HTTP API base URL
@@ -90,4 +95,3 @@ Seniverse:
 
 - Vision tool fails with timeout: increase the client-side MCP/tool timeout (vision calls can be slower).
 - Reminders not delivered: verify NapCat HTTP is reachable and token is correct.
-

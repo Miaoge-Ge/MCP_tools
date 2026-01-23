@@ -9,6 +9,7 @@
 - **stdio MCP server**：适合被宿主程序以子进程方式拉起（stdin/stdout JSON-RPC）。
 - **工具列表**：
   - `vision_describe`：识图（OpenAI 兼容多模态网关）
+  - `image_save`：保存图片（data URL）到本地目录
   - `web_search`：联网搜索（Search1API / Serper）
   - `weather_query`：天气查询（心知天气 Seniverse）
   - `reminder_create` / `reminder_list` / `reminder_cancel`：提醒（通过 NapCat OneBot HTTP API 投递）
@@ -65,6 +66,10 @@ stdio 子进程方式的 MCP 配置示例：
 - `VISION_API_KEY`：key
 - `VISION_MODEL`：模型名（例如 `qwen3-vl-plus`）
 
+### 保存图片
+
+- `IMAGE_SAVE_DIR`：`image_save` 保存图片的目录（默认 `./data/images`）
+
 ### NapCat（提醒投递）
 
 - `NAPCAT_HTTP_URL`：OneBot HTTP API 地址
@@ -90,4 +95,3 @@ stdio 子进程方式的 MCP 配置示例：
 
 - 识图经常超时：识图链路较慢，优先把“客户端侧”的工具超时调大。
 - 提醒投递失败：检查 NapCat HTTP 连通性与 token 是否正确。
-

@@ -15,6 +15,7 @@ from mcp_tools_core.env import bootstrap_env
 from mcp_tools_core.server import serve
 from mcp_tools_core.tooling import ToolRegistry
 from mcp_tools_tools.date_tool import register as register_date
+from mcp_tools_tools.image_save_tool import register as register_image_save
 from mcp_tools_tools.model_name_tool import register as register_model
 from mcp_tools_tools.now_tool import register as register_now
 from mcp_tools_tools.reminders.tool import register as register_reminders
@@ -33,6 +34,7 @@ def main() -> int:
     register_vision(reg)
     register_web_search(reg)
     register_reminders(reg)
+    register_image_save(reg)
     return serve(reg)
 
 
