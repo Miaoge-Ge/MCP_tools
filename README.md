@@ -1,4 +1,4 @@
-﻿# MCP Tools (Python, stdio)
+# MCP Tools (Python, stdio)
 
 [中文说明](README.zh-CN.md)
 
@@ -74,6 +74,8 @@ All configs are loaded from environment variables (typically via `.env`).
 
 - `NAPCAT_HTTP_URL`: OneBot HTTP API base URL
 - `NAPCAT_HTTP_TOKEN`: token if enabled on the server
+- `REMINDER_TIMEZONE`: timezone used for parsing/displaying reminders (IANA name), default `Asia/Shanghai`
+- `TIMEZONE`: default timezone used by time/date tools (IANA name), default `Asia/Shanghai`
 
 ### Web search (optional)
 

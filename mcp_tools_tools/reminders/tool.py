@@ -7,6 +7,9 @@ import threading
 import time
 from typing import Any
 
+from zoneinfo import ZoneInfo
+
+from mcp_tools_core.env import env
 from mcp_tools_core.tooling import ToolRegistry, register_decorated, tool
 from mcp_tools_tools.reminders.napcat_http import NapCatHttpSender
 from mcp_tools_tools.reminders.parser import (
@@ -37,13 +40,21 @@ def _ensure_runtime() -> tuple[ReminderStore, NapCatHttpSender]:
         return _STORE, _SENDER
 
 
+def _tz() -> dt.tzinfo:
+    name = str(env("REMINDER_TIMEZONE") or env("TIMEZONE") or "").strip() or "Asia/Shanghai"
+    try:
+        return ZoneInfo(name)
+    except Exception:
+        return ZoneInfo("Asia/Shanghai")
+
+
 def _fmt_time(ms: int) -> str:
-    d = dt.datetime.fromtimestamp(ms / 1000)
+    d = dt.datetime.fromtimestamp(ms / 1000, tz=_tz())
     return d.strftime("%Y/%m/%d %H:%M:%S")
 
 
 def _fmt_hm(ms: int) -> str:
-    d = dt.datetime.fromtimestamp(ms / 1000)
+    d = dt.datetime.fromtimestamp(ms / 1000, tz=_tz())
     return d.strftime("%H:%M")
 
 

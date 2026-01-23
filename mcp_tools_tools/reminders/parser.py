@@ -1,6 +1,22 @@
 import datetime as _dt
 import re
 
+from zoneinfo import ZoneInfo
+
+from mcp_tools_core.env import env
+
+
+def _tz() -> _dt.tzinfo:
+    name = str(env("REMINDER_TIMEZONE") or env("TIMEZONE") or "").strip() or "Asia/Shanghai"
+    try:
+        return ZoneInfo(name)
+    except Exception:
+        return ZoneInfo("Asia/Shanghai")
+
+
+def _now_dt(now_ms: int) -> _dt.datetime:
+    return _dt.datetime.fromtimestamp(now_ms / 1000, tz=_tz())
+
 
 def _clamp_int(n: int, min_v: int, max_v: int) -> int:
     return max(min_v, min(max_v, int(n)))
@@ -118,7 +134,7 @@ def _parse_time_token(text: str) -> tuple[int, int] | None:
 
 
 def _compute_next_time(day_hint: str | None, hour: int, minute: int, now_ms: int) -> int:
-    now = _dt.datetime.fromtimestamp(now_ms / 1000)
+    now = _now_dt(now_ms)
     base = now.replace(second=0, microsecond=0, hour=int(hour), minute=int(minute))
     if day_hint == "tomorrow":
         base = base + _dt.timedelta(days=1)
@@ -172,7 +188,7 @@ def _parse_absolute_reminder(text: str, now_ms: int) -> tuple[int, str] | None:
         if not msg:
             return None
         try:
-            due = int(_dt.datetime(year, month, day, hour, minute).timestamp() * 1000)
+            due = int(_dt.datetime(year, month, day, hour, minute, tzinfo=_tz()).timestamp() * 1000)
         except Exception:
             return None
         if due <= now_ms:

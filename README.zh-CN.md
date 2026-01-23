@@ -1,4 +1,4 @@
-﻿# MCP 工具集（Python，stdio）
+# MCP 工具集（Python，stdio）
 
 [English README](README.md)
 
@@ -74,6 +74,8 @@ stdio 子进程方式的 MCP 配置示例：
 
 - `NAPCAT_HTTP_URL`：OneBot HTTP API 地址
 - `NAPCAT_HTTP_TOKEN`：如果 NapCat HTTP 开了 token，这里必须一致
+- `REMINDER_TIMEZONE`：提醒解析与展示用的时区（IANA 名称），默认 `Asia/Shanghai`
+- `TIMEZONE`：时间/日期工具默认时区（IANA 名称），默认 `Asia/Shanghai`
 
 ### 联网搜索（可选）
 
