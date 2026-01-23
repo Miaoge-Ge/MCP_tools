@@ -1,7 +1,12 @@
+"""Model metadata tools."""
+
+from __future__ import annotations
+
 import os
 
+from mcp.server.fastmcp import FastMCP
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ENV_BOOTSTRAPPED = False
 
 
 def _load_dotenv_file(file_path: str) -> dict[str, str]:
@@ -29,9 +34,14 @@ def _load_dotenv_file(file_path: str) -> dict[str, str]:
     return out
 
 
-def bootstrap_env() -> None:
+def _bootstrap_env() -> None:
+    global _ENV_BOOTSTRAPPED
+    if _ENV_BOOTSTRAPPED:
+        return
+    _ENV_BOOTSTRAPPED = True
     explicit = str(os.environ.get("MCP_TOOLS_ENV_FILE") or "").strip()
-    env_file = explicit or os.path.join(ROOT_DIR, ".env")
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env_file = explicit or os.path.join(root, ".env")
     if not os.path.exists(env_file):
         return
     parsed = _load_dotenv_file(env_file)
@@ -40,15 +50,18 @@ def bootstrap_env() -> None:
             os.environ[k] = v
 
 
-def env(name: str) -> str | None:
+def _env(name: str) -> str | None:
+    _bootstrap_env()
     v = os.environ.get(name)
     if not v:
         return None
     s = str(v).strip()
     return s or None
 
-
-def project_abs(path: str) -> str:
-    if os.path.isabs(path):
-        return path
-    return os.path.abspath(os.path.join(ROOT_DIR, path))
+def register(mcp: FastMCP) -> None:
+    @mcp.tool(name="get_model_name", description="获取当前使用的语言模型名称")
+    def get_model_name() -> str:
+        model = (_env("LLM_MODEL") or "deepseek-v3").strip()
+        if not model:
+            return "错误：模型名称未配置或无效"
+        return model

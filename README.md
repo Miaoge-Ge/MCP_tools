@@ -1,4 +1,4 @@
-# MCP Tools (Python, stdio)
+# MCP (Python, stdio)
 
 [中文说明](README.zh-CN.md)
 
@@ -14,12 +14,13 @@ This repo provides a lightweight **MCP server** (Model Context Protocol) impleme
   - `weather_query`: Seniverse (心知天气)
   - `reminder_create` / `reminder_list` / `reminder_cancel`: reminders delivered via NapCat OneBot HTTP API
   - `now` / `get_date` / `get_model_name`
-- **Decorator-style tool registration**: tools are declared with `@tool(...)` and registered automatically.
+- Built with the official MCP Python SDK (FastMCP).
 - **No secrets committed**: `.env` is ignored; `.env.example` is provided.
 
 ## Requirements
 
 - Python 3.10+ (recommended)
+- `mcp` Python package (see `requirements.txt`)
 
 ## Quick Start
 
@@ -32,6 +33,7 @@ cp .env.example .env
 2) Start the server (stdio mode):
 
 ```bash
+python3 -m pip install -r requirements.txt
 python3 server.py
 ```
 
@@ -48,8 +50,8 @@ Example MCP client configuration (stdio subprocess):
       "name": "tools",
       "command": "python3",
       "args": ["server.py"],
-      "cwd": "/absolute/path/to/mcp_tools",
-      "envFile": "/absolute/path/to/mcp_tools/.env",
+      "cwd": "/absolute/path/to/MCP",
+      "envFile": "/absolute/path/to/MCP/.env",
       "enabled": true
     }
   ]

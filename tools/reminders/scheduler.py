@@ -1,8 +1,8 @@
 import threading
 import time
 
-from mcp_tools_tools.reminders.napcat_http import NapCatHttpSender
-from mcp_tools_tools.reminders.store import ReminderStore
+from .napcat_http import NapCatHttpSender
+from .store import ReminderStore
 
 
 def _format_mention(mention_user_id: str | None) -> str | None:
@@ -46,4 +46,3 @@ class ReminderScheduler(threading.Thread):
                 self._store.mark_failed(rid, str(e))
             finally:
                 self._store.release_send_lock(rid)
-

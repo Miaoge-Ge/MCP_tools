@@ -1,4 +1,4 @@
-# MCP 工具集（Python，stdio）
+# MCP（Python，stdio）
 
 [English README](README.md)
 
@@ -14,12 +14,13 @@
   - `weather_query`：天气查询（心知天气 Seniverse）
   - `reminder_create` / `reminder_list` / `reminder_cancel`：提醒（通过 NapCat OneBot HTTP API 投递）
   - `now` / `get_date` / `get_model_name`：基础工具
-- **装饰器式声明与自动注册**：使用 `@tool(...)` 声明工具，模块 `register()` 自动收集注册。
+- 基于官方 MCP Python SDK（FastMCP）。
 - **不提交密钥**：默认忽略 `.env`，提供 `.env.example` 模板。
 
 ## 运行前提
 
 - Python 3.10+（推荐）
+- 需要安装 `mcp` 依赖（见 `requirements.txt`）
 
 ## 快速开始
 
@@ -32,6 +33,7 @@ cp .env.example .env
 2）启动 MCP server（stdio 模式）：
 
 ```bash
+python3 -m pip install -r requirements.txt
 python3 server.py
 ```
 
@@ -48,8 +50,8 @@ stdio 子进程方式的 MCP 配置示例：
       "name": "tools",
       "command": "python3",
       "args": ["server.py"],
-      "cwd": "/绝对路径/mcp_tools",
-      "envFile": "/绝对路径/mcp_tools/.env",
+      "cwd": "/绝对路径/MCP",
+      "envFile": "/绝对路径/MCP/.env",
       "enabled": true
     }
   ]
