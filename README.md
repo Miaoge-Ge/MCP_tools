@@ -10,6 +10,7 @@ This repo provides a lightweight **MCP server** (Model Context Protocol) impleme
 - **Tools**:
   - `vision_describe`: image understanding via an OpenAI-compatible multimodal gateway
   - `file_save`: save files (data URLs or URLs) to local directory (typed subdirs; max 30MB per file)
+  - `bot_power_off` / `bot_power_on` / `bot_power_status`: group "power" (mute) control (admin-only)
   - `web_search`: search via Search1API or Serper
   - `weather_query`: Seniverse (心知天气)
   - `reminder_create` / `reminder_list` / `reminder_cancel`: reminders delivered via NapCat OneBot HTTP API
@@ -73,6 +74,12 @@ All configs are loaded from environment variables (typically via `.env`).
 - `FILE_SAVE_DIR`: base directory for `file_save` (default `./data/files`)
   - Auto subdirectories by file type: `images/`, `videos/`, `audio/`, `text/`, `files/`, `others/`
   - Max file size: 30MB per single file
+
+### Group power (mute) control
+
+- `BOT_ADMIN_QQ_IDS`: comma-separated QQ IDs. Only these users can call `bot_power_off` / `bot_power_on`
+- `BOT_POWER_GROUP_IDS`: optional group allowlist (comma-separated). Empty means enabled for all groups
+- `BOT_POWER_STATE_FILE`: optional state file path (default `./data/power_state.json`)
 
 ### NapCat (for reminders delivery)
 

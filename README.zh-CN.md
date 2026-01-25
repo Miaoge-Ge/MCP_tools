@@ -10,6 +10,7 @@
 - **工具列表**：
   - `vision_describe`：识图（OpenAI 兼容多模态网关）
   - `file_save`：保存文件（data URL 或 URL）到本地目录（按类型分目录；单个文件≤30MB）
+  - `bot_power_off` / `bot_power_on` / `bot_power_status`：群聊关机/开机（仅管理员）
   - `web_search`：联网搜索（Search1API / Serper）
   - `weather_query`：天气查询（心知天气 Seniverse）
   - `reminder_create` / `reminder_list` / `reminder_cancel`：提醒（通过 NapCat OneBot HTTP API 投递）
@@ -73,6 +74,12 @@ stdio 子进程方式的 MCP 配置示例：
 - `FILE_SAVE_DIR`：`file_save` 保存文件的根目录（默认 `./data/files`）
   - 自动按文件类型分目录：`images/`、`videos/`、`audio/`、`text/`、`files/`、`others/`
   - 单个文件大小限制：30MB
+
+### 群聊关机/开机
+
+- `BOT_ADMIN_QQ_IDS`：管理员 QQ 号列表（逗号分隔），仅管理员可执行 `bot_power_off` / `bot_power_on`
+- `BOT_POWER_GROUP_IDS`：可选，限制只在这些群生效（逗号分隔）；为空则所有群都可用
+- `BOT_POWER_STATE_FILE`：可选，状态文件路径（默认 `./data/power_state.json`）
 
 ### NapCat（提醒投递）
 
