@@ -9,7 +9,7 @@ This repo provides a lightweight **MCP server** (Model Context Protocol) impleme
 - **stdio MCP server**: easy to embed as a subprocess.
 - **Tools**:
   - `vision_describe`: image understanding via an OpenAI-compatible multimodal gateway
-  - `image_save`: save incoming images (data URLs) to local directory
+  - `file_save`: save files (data URLs or URLs) to local directory (typed subdirs; max 30MB per file)
   - `web_search`: search via Search1API or Serper
   - `weather_query`: Seniverse (心知天气)
   - `reminder_create` / `reminder_list` / `reminder_cancel`: reminders delivered via NapCat OneBot HTTP API
@@ -68,9 +68,11 @@ All configs are loaded from environment variables (typically via `.env`).
 - `VISION_API_KEY`: API key
 - `VISION_MODEL`: model name (e.g. `qwen3-vl-plus`)
 
-### Image saving
+### File saving
 
-- `IMAGE_SAVE_DIR`: directory to store images saved by `image_save` (default `./data/images`)
+- `FILE_SAVE_DIR`: base directory for `file_save` (default `./data/files`)
+  - Auto subdirectories by file type: `images/`, `videos/`, `audio/`, `text/`, `files/`, `others/`
+  - Max file size: 30MB per single file
 
 ### NapCat (for reminders delivery)
 

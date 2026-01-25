@@ -3,7 +3,7 @@ from mcp.server.fastmcp import FastMCP
 import os
 
 from tools.date_tool import register as register_date
-from tools.image_save_tool import register as register_image_save
+from tools.file_save_tool import register as register_file_save
 from tools.model_name_tool import register as register_model
 from tools.now_tool import register as register_now
 from tools.reminders.tool import register as register_reminders
@@ -58,7 +58,7 @@ def main() -> None:
     register_vision(mcp)
     register_web_search(mcp)
     register_reminders(mcp)
-    register_image_save(mcp)
+    register_file_save(mcp)
     mcp.run(transport="stdio")
 
 
