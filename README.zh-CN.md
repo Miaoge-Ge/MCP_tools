@@ -8,8 +8,9 @@
 
 - **stdio MCP server**：适合被宿主程序以子进程方式拉起（stdin/stdout JSON-RPC）。
 - **工具列表**：
-  - `vision_describe`：识图（OpenAI 兼容多模态网关）
+  - `image_understand`：图像理解（OpenAI 兼容多模态网关）
   - `file_save`：保存文件（data URL 或 URL）到本地目录（按类型分目录；单个文件≤30MB）
+  - `image_generate`：文生图（兼容 Ark/OpenAI 与 DashScope）
   - `bot_power_off` / `bot_power_on` / `bot_power_status`：群聊关机/开机（仅管理员）
   - `web_search`：联网搜索（Search1API / Serper）
   - `weather_query`：天气查询（心知天气 Seniverse）
@@ -65,15 +66,43 @@ stdio 子进程方式的 MCP 配置示例：
 
 ### 识图
 
-- `VISION_BASE_URL`：支持多模态的 OpenAI 兼容网关 base url
-- `VISION_API_KEY`：key
-- `VISION_MODEL`：模型名（例如 `qwen3-vl-plus`）
+- `VLM_UNDERSTAND_BASE_URL`：OpenAI 兼容 chat/completions base url
+- `VLM_UNDERSTAND_API_KEY`：key
+- `VLM_UNDERSTAND_MODEL`：模型名（例如 `qwen3-vl-plus`）
 
 ### 保存文件
 
 - `FILE_SAVE_DIR`：`file_save` 保存文件的根目录（默认 `./data/files`）
   - 自动按文件类型分目录：`images/`、`videos/`、`audio/`、`text/`、`files/`、`others/`
   - 单个文件大小限制：30MB
+
+### 文生图
+
+- `IMAGE_GENERATE_BASE_URL`：Ark/OpenAI 兼容 base url（例如 `https://ark.cn-beijing.volces.com/api/v3`）
+- `IMAGE_GENERATE_API_KEY`：key
+- `IMAGE_GENERATE_MODEL`：模型名（例如 `doubao-seedream-4-5-251128`）
+- `IMAGE_GENERATE_SIZE`：尺寸（例如 `2K`，取决于服务端支持）
+- `IMAGE_GENERATE_N`：生成张数（1-4）
+- `IMAGE_GENERATE_WATERMARK`：是否水印（true/false）
+- `IMAGE_GENERATE_SAVE_DIR`：保存目录（默认 `./data/files/images/generated`）
+
+### 工具限额（可选）
+
+- `tool_limits.json`：MCP 工具限额配置文件；不配置或 `limits` 为空则不限制
+- `MCP_LIMITS_FILE`：可选，指定限额配置文件路径（默认 `./tool_limits.json`）
+- `MCP_TOOL_USAGE_FILE`：可选，使用量计数文件路径（默认 `./data/tool_usage.json`）
+
+示例：
+
+```json
+{
+  "timezone": "Asia/Shanghai",
+  "limits": {
+    "web_search": { "per_user_per_day": 20, "per_day": 200 },
+    "image_generate": { "per_user_per_day": 5 }
+  }
+}
+```
 
 ### 群聊关机/开机
 

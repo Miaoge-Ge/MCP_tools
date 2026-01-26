@@ -2,15 +2,16 @@ from mcp.server.fastmcp import FastMCP
 
 import os
 
-from tools.date_tool import register as register_date
-from tools.bot_power_tool import register as register_bot_power
-from tools.file_save_tool import register as register_file_save
-from tools.model_name_tool import register as register_model
-from tools.now_tool import register as register_now
+from tools.bot_power import register as register_bot_power
+from tools.clock import register as register_clock
+from tools.date import register as register_date
+from tools.file_save import register as register_file_save
+from tools.image_generate import register as register_image_generate
+from tools.image_understand import register as register_image_understand
+from tools.model import register as register_model
 from tools.reminders.tool import register as register_reminders
-from tools.vision_tool import register as register_vision
-from tools.web_search_tool import register as register_web_search
-from tools.weather_tool import register as register_weather
+from tools.web_search import register as register_web_search
+from tools.weather_query import register as register_weather_query
 
 
 def _load_dotenv_file(file_path: str) -> dict[str, str]:
@@ -52,15 +53,16 @@ def bootstrap_env() -> None:
 def main() -> None:
     bootstrap_env()
     mcp = FastMCP(name="tools", json_response=False)
-    register_now(mcp)
+    register_clock(mcp)
     register_model(mcp)
     register_date(mcp)
-    register_weather(mcp)
-    register_vision(mcp)
+    register_weather_query(mcp)
+    register_image_understand(mcp)
     register_web_search(mcp)
     register_reminders(mcp)
     register_file_save(mcp)
     register_bot_power(mcp)
+    register_image_generate(mcp)
     mcp.run(transport="stdio")
 
 

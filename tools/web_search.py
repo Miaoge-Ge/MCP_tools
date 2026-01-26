@@ -10,6 +10,8 @@ import urllib.request
 
 from mcp.server.fastmcp import FastMCP
 
+from tools.limits import enforce_daily_limits
+
 _ENV_BOOTSTRAPPED = False
 
 
@@ -30,7 +32,9 @@ def _load_dotenv_file(file_path: str) -> dict[str, str]:
                 if not key:
                     continue
                 val = v.strip()
-                if len(val) >= 2 and ((val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")):
+                if len(val) >= 2 and (
+                    (val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")
+                ):
                     val = val[1:-1].strip()
                 out[key] = val
     except Exception:
@@ -189,7 +193,17 @@ def _try_search1api(api_key: str, query: str, prefer_zh: bool) -> str:
 
 def register(mcp: FastMCP) -> None:
     @mcp.tool(name="web_search", description="联网搜索（优先 Search1API，其次 Serper）")
-    def web_search(query: str) -> str:
+    def web_search(
+        query: str,
+        chat_type: str | None = None,
+        user_id: str | None = None,
+        group_id: str | None = None,
+    ) -> str:
+        try:
+            enforce_daily_limits(tool_name="web_search", chat_type=chat_type, user_id=user_id, group_id=group_id)
+        except Exception as e:
+            return f"错误：{e}"
+
         q = str(query or "").strip()
         if not q:
             return "错误：搜索查询不能为空或无效。"

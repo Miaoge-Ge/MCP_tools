@@ -8,8 +8,9 @@ This repo provides a lightweight **MCP server** (Model Context Protocol) impleme
 
 - **stdio MCP server**: easy to embed as a subprocess.
 - **Tools**:
-  - `vision_describe`: image understanding via an OpenAI-compatible multimodal gateway
+  - `image_understand`: image understanding via an OpenAI-compatible multimodal gateway
   - `file_save`: save files (data URLs or URLs) to local directory (typed subdirs; max 30MB per file)
+  - `image_generate`: text-to-image (Ark/OpenAI-compatible and DashScope)
   - `bot_power_off` / `bot_power_on` / `bot_power_status`: group "power" (mute) control (admin-only)
   - `web_search`: search via Search1API or Serper
   - `weather_query`: Seniverse (心知天气)
@@ -63,17 +64,45 @@ Example MCP client configuration (stdio subprocess):
 
 All configs are loaded from environment variables (typically via `.env`).
 
-### Vision
+### Image understanding
 
-- `VISION_BASE_URL`: OpenAI-compatible base URL (multimodal supported)
-- `VISION_API_KEY`: API key
-- `VISION_MODEL`: model name (e.g. `qwen3-vl-plus`)
+- `VLM_UNDERSTAND_BASE_URL`: OpenAI-compatible chat/completions base URL
+- `VLM_UNDERSTAND_API_KEY`: API key
+- `VLM_UNDERSTAND_MODEL`: model name (e.g. `qwen3-vl-plus`)
 
 ### File saving
 
 - `FILE_SAVE_DIR`: base directory for `file_save` (default `./data/files`)
   - Auto subdirectories by file type: `images/`, `videos/`, `audio/`, `text/`, `files/`, `others/`
   - Max file size: 30MB per single file
+
+### Text-to-image
+
+- `IMAGE_GENERATE_BASE_URL`: Ark/OpenAI compatible base URL (e.g. `https://ark.cn-beijing.volces.com/api/v3`)
+- `IMAGE_GENERATE_API_KEY`: API key
+- `IMAGE_GENERATE_MODEL`: model name (e.g. `doubao-seedream-4-5-251128`)
+- `IMAGE_GENERATE_SIZE`: size (e.g. `2K`, depends on provider)
+- `IMAGE_GENERATE_N`: number of images (1-4)
+- `IMAGE_GENERATE_WATERMARK`: watermark (true/false)
+- `IMAGE_GENERATE_SAVE_DIR`: save dir (default `./data/files/images/generated`)
+
+### Tool quotas (optional)
+
+- `tool_limits.json`: MCP tool quota config file. If missing or empty, no limits.
+- `MCP_LIMITS_FILE`: optional override path (default `./tool_limits.json`)
+- `MCP_TOOL_USAGE_FILE`: optional usage counter file (default `./data/tool_usage.json`)
+
+Example:
+
+```json
+{
+  "timezone": "Asia/Shanghai",
+  "limits": {
+    "web_search": { "per_user_per_day": 20, "per_day": 200 },
+    "image_generate": { "per_user_per_day": 5 }
+  }
+}
+```
 
 ### Group power (mute) control
 

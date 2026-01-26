@@ -1,0 +1,8 @@
+{
+  "timezone": "Asia/Shanghai",
+  "limits": {
+    "image_generate": {
+      "per_day": 30
+    }
+  }
+}

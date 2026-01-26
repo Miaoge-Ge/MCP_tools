@@ -19,6 +19,7 @@ from .parser import (
 )
 from .scheduler import ReminderScheduler
 from .store import ReminderStore
+from tools.limits import enforce_daily_limits
 
 
 _LOCK = threading.Lock()
@@ -130,6 +131,10 @@ def register(mcp: FastMCP) -> None:
         due_at_ms: int | None = None,
         text: str | None = None,
     ) -> str:
+        try:
+            enforce_daily_limits(tool_name="reminder_create", chat_type=chat_type, user_id=user_id, group_id=group_id)
+        except Exception as e:
+            return f"错误：{e}"
         store, _ = _ensure_runtime()
         chat_type0 = str(chat_type or "").strip()
         user_id0 = str(user_id or "").strip()
@@ -191,6 +196,10 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool(name="reminder_list", description="列出我创建的待执行提醒")
     def reminder_list(chat_type: str, user_id: str, group_id: str | None = None, limit: int = 10) -> str:
+        try:
+            enforce_daily_limits(tool_name="reminder_list", chat_type=chat_type, user_id=user_id, group_id=group_id)
+        except Exception as e:
+            return f"错误：{e}"
         store, _ = _ensure_runtime()
         chat_type0 = str(chat_type or "").strip()
         user_id0 = str(user_id or "").strip()
@@ -209,6 +218,10 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool(name="reminder_cancel", description="取消我创建的提醒（通过提醒ID前缀）")
     def reminder_cancel(user_id: str, reminder_id: str) -> str:
+        try:
+            enforce_daily_limits(tool_name="reminder_cancel", chat_type=None, user_id=user_id, group_id=None)
+        except Exception as e:
+            return f"错误：{e}"
         store, _ = _ensure_runtime()
         user_id0 = str(user_id or "").strip()
         reminder_id0 = str(reminder_id or "").strip()

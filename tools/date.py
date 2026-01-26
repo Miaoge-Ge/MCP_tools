@@ -1,4 +1,4 @@
-"""Time-related tools."""
+"""Date-related tool."""
 
 from __future__ import annotations
 
@@ -9,6 +9,8 @@ import time
 from zoneinfo import ZoneInfo
 
 from mcp.server.fastmcp import FastMCP
+
+from tools.limits import enforce_daily_limits
 
 _ENV_BOOTSTRAPPED = False
 
@@ -30,7 +32,9 @@ def _load_dotenv_file(file_path: str) -> dict[str, str]:
                 if not key:
                     continue
                 val = v.strip()
-                if len(val) >= 2 and ((val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")):
+                if len(val) >= 2 and (
+                    (val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")
+                ):
                     val = val[1:-1].strip()
                 out[key] = val
     except Exception:
@@ -84,76 +88,34 @@ def _day_of_year_for(d: dt.datetime) -> int:
     return int((d - start).total_seconds() // 86400) + 1
 
 
-def _build_datetime_payload(
-    *,
-    now_ms: int,
-    tz: dt.tzinfo,
-    locale_format: str = "%Y/%m/%d %H:%M:%S",
-    date_format: str = "%Y-%m-%d",
-    include_weekday: bool = True,
-    include_weekday_cn: bool = True,
-    include_day_of_year: bool = True,
-) -> dict:
+def _build_payload(*, now_ms: int, tz: dt.tzinfo, date_format: str = "%Y-%m-%d") -> dict:
     local = dt.datetime.fromtimestamp(now_ms / 1000, tz=tz)
-    utc = local.astimezone(dt.timezone.utc)
-    payload: dict = {
-        "tz": str(getattr(tz, "key", None) or tz),
-        "epoch_ms": int(now_ms),
-        "iso_utc": utc.isoformat().replace("+00:00", "Z"),
-        "local": local.strftime(locale_format),
+    return {
         "date": local.strftime(date_format),
         "year": int(local.year),
         "month": int(local.month),
         "day": int(local.day),
+        "weekday": local.strftime("%A"),
+        "weekday_cn": _weekday_cn_for(local),
+        "day_of_year": _day_of_year_for(local),
     }
-    if include_weekday:
-        payload["weekday"] = local.strftime("%A")
-    if include_weekday_cn:
-        payload["weekday_cn"] = _weekday_cn_for(local)
-    if include_day_of_year:
-        payload["day_of_year"] = _day_of_year_for(local)
-    return payload
 
 
 def register(mcp: FastMCP) -> None:
-    @mcp.tool(name="datetime_now", description="获取当前日期与时间（支持时区），返回结构化字段")
-    def datetime_now(
+    @mcp.tool(name="get_date", description="获取当前日期的详细信息")
+    def get_date(
         tz: str | None = None,
         at_ms: int | None = None,
-        locale_format: str = "%Y/%m/%d %H:%M:%S",
         date_format: str = "%Y-%m-%d",
-        include_weekday: bool = True,
-        include_weekday_cn: bool = True,
-        include_day_of_year: bool = True,
+        chat_type: str | None = None,
+        user_id: str | None = None,
+        group_id: str | None = None,
     ) -> str:
+        try:
+            enforce_daily_limits(tool_name="get_date", chat_type=chat_type, user_id=user_id, group_id=group_id)
+        except Exception as e:
+            return f"错误：{e}"
         tz0 = _resolve_timezone(tz)
         now_ms = _resolve_now_ms(at_ms)
-        payload = _build_datetime_payload(
-            now_ms=now_ms,
-            tz=tz0,
-            locale_format=locale_format,
-            date_format=date_format,
-            include_weekday=include_weekday,
-            include_weekday_cn=include_weekday_cn,
-            include_day_of_year=include_day_of_year,
-        )
+        payload = _build_payload(now_ms=now_ms, tz=tz0, date_format=date_format)
         return json.dumps(payload, ensure_ascii=False, indent=2)
-
-    @mcp.tool(name="now", description="获取当前时间（UTC ISO 与本地时间字符串，可选时区）")
-    def now(
-        tz: str | None = None,
-        at_ms: int | None = None,
-        locale_format: str = "%Y/%m/%d %H:%M:%S",
-    ) -> str:
-        tz0 = _resolve_timezone(tz)
-        now_ms = _resolve_now_ms(at_ms)
-        payload = _build_datetime_payload(
-            now_ms=now_ms,
-            tz=tz0,
-            locale_format=locale_format,
-            include_weekday=False,
-            include_weekday_cn=False,
-            include_day_of_year=False,
-        )
-        out = {"iso": payload["iso_utc"], "locale": payload["local"], "tz": payload["tz"], "epoch_ms": payload["epoch_ms"]}
-        return json.dumps(out, ensure_ascii=False, indent=2)

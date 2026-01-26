@@ -1,19 +1,21 @@
-"""File saving tool (data URL -> local file)."""
+"""File saving tool (data URL or http/https URL -> local file)."""
 
 from __future__ import annotations
 
 import base64
 import hashlib
-import json
-import mimetypes
-import math
-import os
-import socket
 import ipaddress
+import json
+import math
+import mimetypes
+import os
 import re
+import socket
 import time
 import urllib.parse
 import urllib.request
+
+from tools.limits import enforce_daily_limits
 
 _ENV_BOOTSTRAPPED = False
 
@@ -103,6 +105,14 @@ def _default_save_dir() -> str:
     return os.path.join(_project_root(), "data", "files")
 
 
+def _resolve_path_from_root(p: str) -> str:
+    raw = str(p or "").strip()
+    expanded = os.path.expanduser(raw)
+    if os.path.isabs(expanded):
+        return os.path.abspath(expanded)
+    return os.path.abspath(os.path.join(_project_root(), expanded))
+
+
 def _sanitize_subdir(raw: str | None) -> str | None:
     s = str(raw or "").strip()
     if not s:
@@ -133,7 +143,7 @@ def _category_dirname(mime: str) -> str:
 
 def _resolve_save_dir(mime: str, subdir: str | None) -> str:
     base = str(_env("FILE_SAVE_DIR") or "").strip() or _default_save_dir()
-    base = os.path.abspath(os.path.expanduser(base))
+    base = _resolve_path_from_root(base)
     category = _category_dirname(mime)
     base2 = os.path.abspath(os.path.join(base, category))
     sd = _sanitize_subdir(subdir)
@@ -283,14 +293,22 @@ def save_files(
         saved.append({"path": path, "mime": mime, "kind": _category_dirname(mime), "bytes": len(blob), "sha256": sha})
 
     base = str(_env("FILE_SAVE_DIR") or "").strip() or _default_save_dir()
-    base = os.path.abspath(os.path.expanduser(base))
+    base = _resolve_path_from_root(base)
     return {"base_dir": base, "count": len(saved), "max_single_bytes": max_single_bytes, "files": saved}
 
 
 def register(mcp) -> None:
     @mcp.tool(name="file_save", description="把文件（data URL 或 http/https URL）保存到本地目录（按类型分目录，支持子目录；单个文件<=30MB）")
-    def file_save(files: list[str], subdir: str | None = None, filename_prefix: str | None = None) -> str:
+    def file_save(
+        files: list[str],
+        subdir: str | None = None,
+        filename_prefix: str | None = None,
+        chat_type: str | None = None,
+        user_id: str | None = None,
+        group_id: str | None = None,
+    ) -> str:
         try:
+            enforce_daily_limits(tool_name="file_save", chat_type=chat_type, user_id=user_id, group_id=group_id)
             res = save_files(files, subdir=subdir, filename_prefix=filename_prefix, max_single_bytes=MAX_SINGLE_FILE_BYTES, max_files=MAX_FILES)
             return json.dumps(res, ensure_ascii=False, indent=2)
         except Exception as e:

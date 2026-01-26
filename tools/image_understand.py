@@ -1,14 +1,16 @@
-"""Vision tools via OpenAI-compatible chat/completions endpoint."""
+"""Image understanding via OpenAI-compatible chat/completions endpoint."""
 
 from __future__ import annotations
 
 import json
 import os
-import urllib.parse
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from mcp.server.fastmcp import FastMCP
+
+from tools.limits import enforce_daily_limits
 
 _ENV_BOOTSTRAPPED = False
 
@@ -30,7 +32,9 @@ def _load_dotenv_file(file_path: str) -> dict[str, str]:
                 if not key:
                     continue
                 val = v.strip()
-                if len(val) >= 2 and ((val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")):
+                if len(val) >= 2 and (
+                    (val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")
+                ):
                     val = val[1:-1].strip()
                 out[key] = val
     except Exception:
@@ -116,19 +120,30 @@ def _extract_text_from_chat_response(parsed: object) -> str:
 
 
 def register(mcp: FastMCP) -> None:
-    @mcp.tool(name="vision_describe", description="图像理解（OpenAI 兼容接口，支持 image_url data URL）")
-    def vision_describe(images: list[str], prompt: str | None = None) -> str:
+    @mcp.tool(name="image_understand", description="图像理解（OpenAI 兼容接口，支持 image_url data URL）")
+    def image_understand(
+        images: list[str],
+        prompt: str | None = None,
+        chat_type: str | None = None,
+        user_id: str | None = None,
+        group_id: str | None = None,
+    ) -> str:
+        try:
+            enforce_daily_limits(tool_name="image_understand", chat_type=chat_type, user_id=user_id, group_id=group_id)
+        except Exception as e:
+            return f"错误：{e}"
+
         imgs = [str(x).strip() for x in (images or []) if str(x or "").strip()]
         imgs = imgs[:3]
         prompt0 = str(prompt or "").strip()
         if not imgs:
             return "错误：images 不能为空"
 
-        base_url = _normalize_base_url(_env("VISION_BASE_URL"))
-        api_key = _env("VISION_API_KEY")
-        model = _env("VISION_MODEL") or "gpt-4o-mini"
+        base_url = _normalize_base_url(_env("VLM_UNDERSTAND_BASE_URL"))
+        api_key = _env("VLM_UNDERSTAND_API_KEY")
+        model = _env("VLM_UNDERSTAND_MODEL") or "gpt-4o-mini"
         if not base_url or not api_key:
-            return "缺少识图配置：请在 .env 设置 VISION_BASE_URL / VISION_API_KEY / VISION_MODEL"
+            return "缺少识图配置：请在 .env 设置 VLM_UNDERSTAND_BASE_URL / VLM_UNDERSTAND_API_KEY / VLM_UNDERSTAND_MODEL"
 
         endpoint = _join_url(base_url, "chat/completions")
         content: list[dict] = []

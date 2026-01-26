@@ -1,4 +1,4 @@
-"""Weather tools powered by Seniverse (心知天气)."""
+"""Weather tool powered by Seniverse (心知天气)."""
 
 from __future__ import annotations
 
@@ -8,11 +8,13 @@ import hmac
 import json
 import os
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.error
 
 from mcp.server.fastmcp import FastMCP
+
+from tools.limits import enforce_daily_limits
 
 _ENV_BOOTSTRAPPED = False
 
@@ -34,7 +36,9 @@ def _load_dotenv_file(file_path: str) -> dict[str, str]:
                 if not key:
                     continue
                 val = v.strip()
-                if len(val) >= 2 and ((val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")):
+                if len(val) >= 2 and (
+                    (val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")
+                ):
                     val = val[1:-1].strip()
                 out[key] = val
     except Exception:
@@ -96,7 +100,17 @@ def _normalize_seniverse_host(raw: str | None) -> str:
 
 def register(mcp: FastMCP) -> None:
     @mcp.tool(name="weather_query", description="获取指定城市当前天气（需要配置 SENIVERSE_PUBLIC_KEY / SENIVERSE_PRIVATE_KEY）")
-    def weather_query(location: str) -> str:
+    def weather_query(
+        location: str,
+        chat_type: str | None = None,
+        user_id: str | None = None,
+        group_id: str | None = None,
+    ) -> str:
+        try:
+            enforce_daily_limits(tool_name="weather_query", chat_type=chat_type, user_id=user_id, group_id=group_id)
+        except Exception as e:
+            return f"错误：{e}"
+
         loc = str(location or "").strip()
         if not loc:
             return "错误：城市名称不能为空或无效"

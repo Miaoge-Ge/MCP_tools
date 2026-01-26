@@ -5,6 +5,8 @@ import os
 import time
 from typing import Any
 
+from tools.limits import enforce_daily_limits
+
 _ENV_BOOTSTRAPPED = False
 
 
@@ -93,7 +95,10 @@ def _state_path() -> str:
     p = str(_env("BOT_POWER_STATE_FILE") or "").strip()
     if not p:
         return _default_state_path()
-    return os.path.abspath(os.path.expanduser(p))
+    expanded = os.path.expanduser(p)
+    if os.path.isabs(expanded):
+        return os.path.abspath(expanded)
+    return os.path.abspath(os.path.join(_project_root(), expanded))
 
 
 def _read_state() -> dict[str, Any]:
@@ -169,12 +174,7 @@ def _get_group_status(group_id: str) -> dict[str, Any]:
     item = groups2.get(group_id)
     until_ms = int(item.get("until_ms")) if isinstance(item, dict) and "until_ms" in item else 0
     muted = until_ms > now
-    return {
-        "group_id": group_id,
-        "muted": bool(muted),
-        "until_ms": until_ms if muted else 0,
-        "remaining_ms": int(max(0, until_ms - now)) if muted else 0,
-    }
+    return {"group_id": group_id, "muted": bool(muted), "until_ms": until_ms if muted else 0, "remaining_ms": int(max(0, until_ms - now)) if muted else 0}
 
 
 def power_off_group(*, chat_type: str, group_id: str, user_id: str, hours: float) -> dict[str, Any]:
@@ -214,6 +214,7 @@ def register(mcp) -> None:
     @mcp.tool(name="bot_power_off", description="群聊关机：在指定群内一段时间不再回复任何人（仅管理员）")
     def bot_power_off(chat_type: str, group_id: str, user_id: str, hours: float) -> str:
         try:
+            enforce_daily_limits(tool_name="bot_power_off", chat_type=chat_type, user_id=user_id, group_id=group_id)
             res = power_off_group(chat_type=chat_type, group_id=group_id, user_id=user_id, hours=hours)
             return json.dumps(res, ensure_ascii=False, indent=2)
         except Exception as e:
@@ -222,14 +223,16 @@ def register(mcp) -> None:
     @mcp.tool(name="bot_power_on", description="群聊开机：解除指定群的关机状态（仅管理员）")
     def bot_power_on(chat_type: str, group_id: str, user_id: str) -> str:
         try:
+            enforce_daily_limits(tool_name="bot_power_on", chat_type=chat_type, user_id=user_id, group_id=group_id)
             res = power_on_group(chat_type=chat_type, group_id=group_id, user_id=user_id)
             return json.dumps(res, ensure_ascii=False, indent=2)
         except Exception as e:
             return f"错误：{e}"
 
     @mcp.tool(name="bot_power_status", description="查询指定群是否处于关机状态")
-    def bot_power_status(chat_type: str, group_id: str) -> str:
+    def bot_power_status(chat_type: str, group_id: str, user_id: str | None = None) -> str:
         try:
+            enforce_daily_limits(tool_name="bot_power_status", chat_type=chat_type, user_id=user_id, group_id=group_id)
             gid = _require_group(chat_type, group_id)
             res = _get_group_status(gid)
             return json.dumps(res, ensure_ascii=False, indent=2)

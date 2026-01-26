@@ -6,6 +6,8 @@ import os
 
 from mcp.server.fastmcp import FastMCP
 
+from tools.limits import enforce_daily_limits
+
 _ENV_BOOTSTRAPPED = False
 
 
@@ -26,7 +28,9 @@ def _load_dotenv_file(file_path: str) -> dict[str, str]:
                 if not key:
                     continue
                 val = v.strip()
-                if len(val) >= 2 and ((val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")):
+                if len(val) >= 2 and (
+                    (val[0] == val[-1] and val[0] in ("'", '"')) or (val[0] == "`" and val[-1] == "`")
+                ):
                     val = val[1:-1].strip()
                 out[key] = val
     except Exception:
@@ -58,9 +62,14 @@ def _env(name: str) -> str | None:
     s = str(v).strip()
     return s or None
 
+
 def register(mcp: FastMCP) -> None:
     @mcp.tool(name="get_model_name", description="获取当前使用的语言模型名称")
-    def get_model_name() -> str:
+    def get_model_name(chat_type: str | None = None, user_id: str | None = None, group_id: str | None = None) -> str:
+        try:
+            enforce_daily_limits(tool_name="get_model_name", chat_type=chat_type, user_id=user_id, group_id=group_id)
+        except Exception as e:
+            return f"错误：{e}"
         model = (_env("LLM_MODEL") or "deepseek-v3").strip()
         if not model:
             return "错误：模型名称未配置或无效"
