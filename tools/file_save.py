@@ -10,6 +10,7 @@ import math
 import mimetypes
 import os
 import re
+import secrets
 import socket
 import time
 import urllib.parse
@@ -260,6 +261,7 @@ def save_files(
     inputs: list[str],
     *,
     subdir: str | None = None,
+    filename: str | None = None,
     filename_prefix: str | None = None,
     max_single_bytes: int = MAX_SINGLE_FILE_BYTES,
     max_files: int = MAX_FILES,
@@ -270,11 +272,20 @@ def save_files(
         raise ValueError("files 不能为空")
 
     subdir0 = _sanitize_subdir(subdir) if isinstance(subdir, str) else None
-    prefix = str(filename_prefix or "file").strip() or "file"
-    prefix = re.sub(r"[^A-Za-z0-9._-]+", "_", prefix)[:32] or "file"
+    base_name = str(filename or "").strip()
+    if base_name:
+        base_name = os.path.basename(base_name.replace("\\", "/"))
+        base_name = re.sub(r"[\r\n\t]+", " ", base_name).strip()
+        base_name = re.sub(r"[^A-Za-z0-9._ -]+", "_", base_name).strip(" ._-")
+        stem = os.path.splitext(base_name)[0].strip(" ._-")
+        if not stem:
+            stem = "file_" + secrets.token_hex(4)
+    else:
+        prefix = str(filename_prefix or "").strip()
+        prefix = re.sub(r"[^A-Za-z0-9._-]+", "_", prefix)[:32].strip(" ._-")
+        stem = prefix if prefix else "file_" + secrets.token_hex(4)
 
     saved: list[dict[str, object]] = []
-    ts = time.strftime("%Y%m%d_%H%M%S")
     for idx, item in enumerate(items):
         if re.match(r"^data:", item, flags=re.I):
             mime, blob = _parse_data_url(item, max_bytes=max_single_bytes)
@@ -286,8 +297,12 @@ def save_files(
         ext = _pick_ext(mime)
         save_dir = _resolve_save_dir(mime, subdir0)
         os.makedirs(save_dir, exist_ok=True)
-        name = f"{prefix}_{ts}_{idx + 1}_{sha[:10]}.{ext}"
+        suffix = f"_{idx + 1}" if len(items) > 1 else ""
+        name = f"{stem}{suffix}.{ext}"
         path = os.path.join(save_dir, name)
+        if os.path.exists(path):
+            name = f"{stem}{suffix}_{sha[:8]}.{ext}"
+            path = os.path.join(save_dir, name)
         with open(path, "wb") as f:
             f.write(blob)
         saved.append({"path": path, "mime": mime, "kind": _category_dirname(mime), "bytes": len(blob), "sha256": sha})
@@ -302,6 +317,7 @@ def register(mcp) -> None:
     def file_save(
         files: list[str],
         subdir: str | None = None,
+        filename: str | None = None,
         filename_prefix: str | None = None,
         chat_type: str | None = None,
         user_id: str | None = None,
@@ -309,7 +325,14 @@ def register(mcp) -> None:
     ) -> str:
         try:
             enforce_daily_limits(tool_name="file_save", chat_type=chat_type, user_id=user_id, group_id=group_id)
-            res = save_files(files, subdir=subdir, filename_prefix=filename_prefix, max_single_bytes=MAX_SINGLE_FILE_BYTES, max_files=MAX_FILES)
+            res = save_files(
+                files,
+                subdir=subdir,
+                filename=filename,
+                filename_prefix=filename_prefix,
+                max_single_bytes=MAX_SINGLE_FILE_BYTES,
+                max_files=MAX_FILES,
+            )
             return json.dumps(res, ensure_ascii=False, indent=2)
         except Exception as e:
             return f"错误：{e}"
