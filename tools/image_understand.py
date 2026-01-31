@@ -67,6 +67,17 @@ def _env(name: str) -> str | None:
     return s or None
 
 
+def _env_int(name: str, default: int) -> int:
+    v = _env(name)
+    if v is None:
+        return default
+    try:
+        n = int(str(v).strip())
+        return n if n > 0 else default
+    except Exception:
+        return default
+
+
 def _http_post_json(url: str, payload: dict, headers: dict[str, str], timeout_s: float = 15.0) -> tuple[int, bytes]:
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(url, data=data, method="POST")
@@ -157,6 +168,7 @@ def register(mcp: FastMCP) -> None:
         payload = {
             "model": model,
             "temperature": 0.2,
+            "max_tokens": _env_int("VLM_UNDERSTAND_MAX_TOKENS", 2048),
             "messages": [{"role": "user", "content": content}],
         }
         headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
