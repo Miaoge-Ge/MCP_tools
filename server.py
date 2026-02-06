@@ -6,6 +6,8 @@ from tools.bot_power import register as register_bot_power
 from tools.clock import register as register_clock
 from tools.date import register as register_date
 from tools.file_save import register as register_file_save
+from tools.gold_alert import start_gold_alert_monitor
+from tools.gold_price import register as register_gold_price
 from tools.image_generate import register as register_image_generate
 from tools.image_understand import register as register_image_understand
 from tools.model import register as register_model
@@ -52,6 +54,7 @@ def bootstrap_env() -> None:
 
 def main() -> None:
     bootstrap_env()
+    start_gold_alert_monitor()
     mcp = FastMCP(name="tools", json_response=False)
     register_clock(mcp)
     register_model(mcp)
@@ -63,6 +66,7 @@ def main() -> None:
     register_file_save(mcp)
     register_bot_power(mcp)
     register_image_generate(mcp)
+    register_gold_price(mcp)
     mcp.run(transport="stdio")
 
 
